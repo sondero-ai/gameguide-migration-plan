@@ -14,23 +14,25 @@
 
 ## 🎯 Project Overview
 
-**Current State:**
-- Static SPA at `sonderox.my.id/game-guide/`
-- 93 heroes, 43 shells, 27 matrix sets, 5 team compositions
-- Data stored in JS files (data.js, shells.js, matrix_effects.js, etc.)
-- Vanilla JS SPA with glassmorphism dark theme
-- Nginx + Cloudflare CDN on VPS
+**Current State (2026-07-02):**
+- ✅ SQLite database with 16 tables, 7 views, 5 triggers
+- ✅ Express.js REST API on port 3001 (PM2 managed)
+- ✅ Admin panel at `sonderox.my.id/game-guide/admin/`
+- ✅ 93 heroes, 43 shells, 27 matrix sets, 5 team compositions
+- ✅ Tier data served from API (real-time, no cache issues)
+- ✅ JWT authentication with role-based access control
+- Frontend SPA still reads from static JS files (Phase 3 pending)
 
 **Target State:**
-- SQLite database backend
-- Express.js REST API
-- Admin panel for CRUD operations
-- Same frontend (minimal changes)
-- Automated data management
+- SQLite database backend ✅
+- Express.js REST API ✅
+- Admin panel for CRUD operations ✅
+- Frontend fetches from API (Phase 3)
+- Automated data management ✅
 
 ---
 
-## 🏗️ Architecture Summary
+## 🏗️ Architecture (Implemented)
 
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────────────┐
@@ -51,6 +53,14 @@
                                                         └─────────────────┘
 ```
 
+**Tier Data Flow (Live):**
+```
+Admin Panel → PUT /api/tiers/bulk → SQLite DB
+                                         │
+Browser → GET /api/tiers ←──────────────┘
+         (fetch on page load)
+```
+
 ---
 
 ## 📊 Database Schema Summary
@@ -67,61 +77,85 @@
 
 ---
 
-## 🖥️ Admin Panel Summary
+## 🖥️ Admin Panel (Implemented)
 
-**8 Pages:**
-1. Login (JWT auth)
-2. Dashboard (stats, quick actions, changelog)
-3. Heroes Management (CRUD, bulk ops, image upload)
-4. Shells Management (CRUD, hero recommendations)
-5. Matrix Management (CRUD, set effects)
-6. Team Compositions (drag-and-drop builder)
-7. Tier List Editor (grid: hero × mode)
-8. Settings (accounts, cache, backups)
+**Pages:**
+1. ✅ Login (JWT auth with refresh tokens)
+2. ✅ Dashboard (stats, quick actions, recent changes)
+3. ✅ Heroes Management (list, search, filter, edit form, tag editor)
+4. ✅ Shells Management (list, search, edit form)
+5. ✅ Matrix Management (list, search, edit form)
+6. ✅ Tier Editor (Kanban board: T0-T5 × 6 modes, drag-drop with SortableJS)
+7. ✅ Teams Management (list)
+8. ✅ Settings (profile, change password, admin overview)
+9. ⬜ Image Upload (not yet implemented)
 
 **Tech Stack:** Alpine.js 3 + Tailwind CSS 3 (zero build step)
 
-**Security:** JWT with refresh tokens, RBAC (super-admin/editor/viewer), rate limiting, CSRF protection
+**Security:** JWT with refresh tokens, RBAC (super-admin/editor), rate limiting
 
 ---
 
 ## 🚀 Migration Strategy
 
-### Phase 1: API + Database (Week 1)
-- Set up Express server + SQLite
-- Create API endpoints
-- Import existing data from JS files
-- Keep static files as fallback
+### Phase 1: API + Database ✅ DONE
+- ✅ Express server + SQLite (better-sqlite3, WAL mode)
+- ✅ REST API endpoints: heroes, shells, matrix, teams, tiers, auth, admin
+- ✅ Data imported from static JS files (93 heroes, 43 shells, 27 matrix, 5 teams)
+- ✅ Static files kept as fallback
+- ✅ PM2 process management
+- ✅ Nginx proxy `/api/` → localhost:3001
 
-### Phase 2: Admin Panel (Week 2)
-- Build admin SPA
-- Implement CRUD operations
-- Add authentication
-- Image upload support
+### Phase 2: Admin Panel ✅ DONE
+- ✅ Admin SPA (Alpine.js + Tailwind CDN)
+- ✅ CRUD operations for heroes, shells, matrix
+- ✅ Tier editor with Kanban drag-drop (T0-T5, 6 game modes)
+- ✅ JWT authentication with login/logout/refresh
+- ✅ Role-based access (super-admin, editor, admin)
+- ✅ Settings page (profile, change password)
+- ✅ Hero tag editor (add/remove skill tags)
+- ✅ Purge cache button (graceful CF missing handling)
+- ⬜ Image upload support (deferred to Phase 4)
 
-### Phase 3: Frontend Switch (Week 3)
-- Modify frontend to fetch from API
-- Add fallback to static data
-- Performance testing
-- Deploy to production
+### Phase 3: Frontend Switch ⬜ NEXT
+- ⬜ Modify frontend to fetch hero/shell/matrix data from API
+- ⬜ Add fallback to static data (if API unavailable)
+- ⬜ Remove dependency on static JS files (data.js, shells.js, matrix_effects.js)
+- ⬜ Performance testing
+- ⬜ Deploy to production
 
-### Phase 4: Polish & Security (Week 4)
-- Security hardening
-- Performance optimization
-- Documentation
-- Monitoring setup
+### Phase 4: Polish & Security
+- ⬜ Security hardening (CSRF, input sanitization, audit logging)
+- ⬜ Performance optimization (API caching, query optimization)
+- ⬜ Image upload support
+- ⬜ Documentation
+- ⬜ Monitoring setup
+- ⬜ Backup automation
+
+---
+
+## 📈 Progress
+
+| Phase | Status | Completion |
+|-------|--------|------------|
+| Phase 1: API + Database | ✅ DONE | 100% |
+| Phase 2: Admin Panel | ✅ DONE | 100% |
+| Phase 3: Frontend Switch | ⬜ NEXT | 0% |
+| Phase 4: Polish & Security | ⬜ FUTURE | 0% |
+
+**Overall: 50% complete (2/4 phases)**
 
 ---
 
 ## 📈 Expected Performance
 
-| Metric | Current | Target |
-|--------|---------|--------|
-| Hero list load | ~50ms (static) | <5ms (API) |
-| Filter/search | Client-side | <10ms (indexed) |
-| Data updates | Manual JS edit | Admin panel |
-| New hero add | Edit data.js + rebuild | Admin panel |
-| Tier changes | Edit patch.js + rebuild | Admin panel |
+| Metric | Current (Static) | Target (API) | Status |
+|--------|-----------------|--------------|--------|
+| Hero list load | ~50ms | <5ms | ⬜ Phase 3 |
+| Filter/search | Client-side | <10ms (indexed) | ⬜ Phase 3 |
+| Data updates | Manual JS edit | Admin panel | ✅ DONE |
+| New hero add | Edit data.js + rebuild | Admin panel | ✅ DONE |
+| Tier changes | Edit patch.js + rebuild | Admin panel | ✅ DONE |
 
 ---
 
@@ -139,40 +173,56 @@
 
 ---
 
-## 📁 Project Structure (Proposed)
+## 📁 Project Structure (Implemented)
 
 ```
 /var/www/hermes-landing/
-├── game-guide/                    # Existing SPA (keep as fallback)
+├── game-guide/                    # Existing SPA (static fallback)
 │   ├── index.html
 │   ├── js/
+│   │   ├── app.js                 # Main app (116KB)
+│   │   ├── data.js                # Hero data (323KB)
+│   │   ├── shells.js              # Shell data (51KB)
+│   │   ├── matrix_effects.js      # Matrix data (46KB)
+│   │   ├── tier_data_patch.js     # Tier fallback (12KB)
+│   │   ├── role_data_patch.js     # Role data (7KB)
+│   │   └── team-builder.js        # Team builder (12KB)
 │   ├── css/
 │   └── assets/
 │
-└── game-guide-api/                # New API server
+└── game-guide-api/                # API server
     ├── src/
     │   ├── db/
-    │   │   ├── schema.sql
+    │   │   ├── schema.sql         # 16 tables, 7 views, 5 triggers
     │   │   ├── seed.sql
+    │   │   ├── connection.js      # SQLite + WAL mode
     │   │   └── migrate.js
     │   ├── routes/
-    │   │   ├── heroes.js
-    │   │   ├── shells.js
-    │   │   ├── matrix.js
-    │   │   ├── teams.js
-    │   │   ├── tiers.js
-    │   │   └── admin.js
+    │   │   ├── heroes.js          # CRUD + tags + tiers
+    │   │   ├── shells.js          # CRUD
+    │   │   ├── matrix.js          # CRUD
+    │   │   ├── teams.js           # CRUD
+    │   │   ├── tiers.js           # GET + bulk update
+    │   │   ├── auth.js            # login/refresh/logout/change-password
+    │   │   └── admin.js           # stats/changelog/backup/purge-cache
     │   ├── middleware/
-    │   │   ├── auth.js
-    │   │   ├── validate.js
+    │   │   ├── auth.js            # JWT + role-based access
+    │   │   ├── validate.js        # Zod validation
     │   │   └── errorHandler.js
-    │   └── index.js
+    │   └── index.js               # Express server (port 3001)
     ├── admin/                     # Admin panel SPA
-    │   ├── index.html
+    │   ├── index.html             # Alpine.js + Tailwind CDN
     │   ├── js/
+    │   │   ├── app.js             # Auth, dashboard, CRUD
+    │   │   └── tier-editor.js     # Kanban board (SortableJS)
     │   └── css/
+    │       ├── admin.css          # Dark gaming theme
+    │       └── tier-editor.css    # Kanban styles
     ├── data/
-    │   └── gameguide.db           # SQLite database
+    │   └── gameguide.db           # SQLite database (WAL mode)
+    ├── logs/
+    ├── scripts/
+    │   └── sync_tiers.sh          # DB → static file sync
     ├── package.json
     └── ecosystem.config.js        # PM2 config
 ```
@@ -181,12 +231,17 @@
 
 ## 📝 Next Steps
 
-1. Review all 3 documents
-2. Approve architecture decisions
-3. Start Phase 1 implementation
-4. Set up development environment
-5. Begin database migration
+1. ✅ ~~Review all 3 documents~~
+2. ✅ ~~Approve architecture decisions~~
+3. ✅ ~~Start Phase 1 implementation~~
+4. ✅ ~~Phase 2: Admin Panel~~
+5. **Phase 3: Frontend Switch to API**
+   - Modify `app.js` to fetch heroes/shells/matrix from API
+   - Keep static files as fallback
+   - Test performance
+   - Deploy
 
 ---
 
-*Documentation generated by KangPalak for Sondero — 2026-07-02*
+*Documentation updated by KangPalak — 2026-07-02*
+*Phase 1 & 2 complete. Phase 3 next.*
